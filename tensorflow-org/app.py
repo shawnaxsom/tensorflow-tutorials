@@ -46,9 +46,10 @@ print(print_pandas_df(test_file_path))
 
 SELECT_COLUMNS = ['survived', 'age', 'n_siblings_spouses', 'parch', 'fare']
 DEFAULTS = [0, 0.0, 0.0, 0.0, 0.0]
-raw_train_data = get_dataset(train_file_path,
-                             select_columns=SELECT_COLUMNS,
-                             column_defaults=DEFAULTS)
+# raw_train_data = get_dataset(train_file_path,
+#                              select_columns=SELECT_COLUMNS,
+#                              column_defaults=DEFAULTS)
+raw_train_data = get_dataset(train_file_path)
 raw_test_data = get_dataset(test_file_path)
 
 print('--------------')
@@ -67,20 +68,26 @@ def pack(features, label):
 
 print('--------------')
 print('Showing batch:')
-print('--------------')
 show_batch(raw_train_data)
-
-
 print('--------------')
-print('Packed data:')
-print('--------------')
+print('')
 
-packed_dataset = raw_train_data.map(pack)
 
-for features, labels in packed_dataset.take(1):
-    print(features.numpy())
-    print()
-    print(labels.numpy())
+# print('--------------')
+# print('Packed data:')
+# print('--------------')
+# print('')
+
+# packed_dataset = raw_train_data.map(pack)
+
+# print('--------------')
+# print('Features in packed_dataset:')
+# for features, labels in packed_dataset.take(1):
+#     print(features.numpy())
+#     print()
+#     print(labels.numpy())
+# print('--------------')
+# print()
 
 
 def get_categorical_data():
@@ -135,6 +142,17 @@ def get_numeric_data():
     return numeric_columns
 
 
+print('--------------')
+print('Categorical data:')
+print(get_categorical_data())
+print('--------------')
+
+print('--------------')
+print('Numeric data:')
+print(get_numeric_data())
+print('--------------')
+
+
 preprocessing_layer = tf.keras.layers.DenseFeatures(
         get_categorical_data()
         + get_numeric_data())
@@ -156,4 +174,26 @@ model.compile(
 train_data = packed_train_data.shuffle(500)
 test_data = packed_test_data
 
-model.fit(train_data, epochs=20)
+print('-----------')
+print('Train data:')
+print(train_data)
+print('-----------')
+
+model.fit(train_data, epochs=50)
+
+# test_loss, test_accuracy = model.evaluate(test_data)
+
+# print('\n\nTest Loss {}, Test Accuracy {}'.format(test_loss, test_accuracy))
+results = model.evaluate(test_data)
+
+print('test loss:', results)
+
+
+predictions = model.predict(test_data)
+
+# Show some results
+for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
+    print("Predicted survival: {:.2%}".format(prediction[0]),
+          " | Actual outcome: ",
+          ("SURVIVED" if bool(survived) else "DIED"))
+
